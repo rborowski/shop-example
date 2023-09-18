@@ -1,11 +1,27 @@
 const User = require("../models/user.model");
-const authUtil = require("../util/authentication")
+const authUtil = require("../util/authentication");
+const validationUtil = require("../util/validation");
 
 function getSignup(req, res) {
   res.render("customer/auth/signup");
 }
 
-async function signup(req, res) {
+async function signup(req, res, next) {
+  if (
+    !validationUtil.userDetailsAreValid(
+      req.body.email,
+      req.body.password,
+      req.body.fullname,
+      req.body.street,
+      req.body.postal,
+      req.body.city
+    ) ||
+    !validationUtil.emaiilIsConfirmed(req.body.email, req.body["confirm-email"])
+  ) {
+    res.redirect("/signup");
+    return;
+  }
+
   const user = new User(
     req.body.email,
     req.body.password,
@@ -15,7 +31,22 @@ async function signup(req, res) {
     req.body.city
   );
 
-  await user.signup();
+  try {
+    const existingUser = await user.existsAlready();
+    if (existingUser) {
+      res.redirect("/signup");
+      return;
+    }
+  } catch (error) {
+    return next(error);
+  }
+
+  try {
+    await user.signup();
+  } catch (error) {
+    return next(error);
+  }
+
   res.redirect("/login");
 }
 
@@ -23,16 +54,21 @@ function getLogin(req, res) {
   res.render("customer/auth/login");
 }
 
-async function login(req, res) {
+async function login(req, res, next) {
   const user = new User(req.body.email, req.body.password);
-  const existingUser = await user.getUserWithSameEmail();
+  let existingUser;
+  try {
+    existingUser = await user.getUserWithSameEmail();
+  } catch (error) {
+    return next(error);
+  }
 
   if (!existingUser) {
     res.redirect("/login");
     return;
   }
 
-  const passwordIsCorrect = user.comparePassword(existingUser.password);
+  const passwordIsCorrect = await user.comparePassword(existingUser.password);
 
   if (!passwordIsCorrect) {
     res.redirect("/login");
@@ -40,15 +76,14 @@ async function login(req, res) {
   }
 
   authUtil.createUserSession(req, existingUser, function () {
-    res.redirect("/")
-  })
-
+    res.redirect("/");
+  });
 }
 
 function logout(req, res) {
-  authUtil.deleteUserSession(req)
+  authUtil.deleteUserSession(req);
   res.redirect("/login");
-  return
+  return;
 }
 
 module.exports = {
@@ -56,5 +91,5 @@ module.exports = {
   signup: signup,
   getLogin: getLogin,
   login: login,
-  logout: logout
+  logout: logout,
 };

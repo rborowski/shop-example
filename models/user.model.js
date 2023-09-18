@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs")
+const bcrypt = require("bcryptjs");
 const db = require("../data/database");
 
 class User {
@@ -14,7 +14,7 @@ class User {
   }
 
   async signup() {
-    const hashedPassword = await bcrypt.hash(this.password,12)
+    const hashedPassword = await bcrypt.hash(this.password, 12);
     await db.getDb().collection("users").insertOne({
       email: this.email,
       password: hashedPassword,
@@ -23,14 +23,21 @@ class User {
     });
   }
 
-  getUserWithSameEmail(){
-    return db.getDb().collection("users").findOne({email: this.email})
+  getUserWithSameEmail() {
+    return db.getDb().collection("users").findOne({ email: this.email });
   }
 
-  async comparePassword(hashedPassword){
-    return await bcrypt.compare(this.password, hashedPassword)
+  async existsAlready() {
+    const existingUser = await this.getUserWithSameEmail();
+    if (existingUser) {
+      return true;
+    }
+    return false;
+  }
+
+  async comparePassword(hashedPassword) {
+    return await bcrypt.compare(this.password, hashedPassword);
   }
 }
 
-
-module.exports = User
+module.exports = User;
