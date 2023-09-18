@@ -20,7 +20,7 @@ function emailIsConfirmed(email, confirmEmail) {
   return email === confirmEmail;
 }
 
-module.export = {
+module.exports = {
   userDetailsAreValid: userDetailsAreValid,
   emailIsConfirmed: emailIsConfirmed,
 };
