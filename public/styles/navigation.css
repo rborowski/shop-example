@@ -80,6 +80,10 @@ main {
   align-items: center;
 }
 
+#mobile-menu.open {
+  display: flex;
+}
+
 #mobile-menu nav{
   height: 20rem;
   width: 90%;
