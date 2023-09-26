@@ -48,7 +48,7 @@ async function updateProduct(req, res, next) {
   )
 
   if (req.file){
-    product.rerplaceImage(req.file.filename)
+    product.replaceImage(req.file.filename)
   }
   try {
     await product.save()
