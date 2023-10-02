@@ -133,3 +133,4 @@ node_modules/*
 package-lock.json
 pass.txt
 images/*
+product-data/*
